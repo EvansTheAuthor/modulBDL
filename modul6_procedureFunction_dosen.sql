@@ -557,8 +557,49 @@ select* from mata_kuliah;
 select* from program_studi;
 
 ---
---- update data dosen
+--- perbaiki data dosen di bagian NIP biar ga ada spasinya
 ---
 
 update dosen
 set nomor_induk_dosen=trim(nomor_induk_dosen);
+
+---
+--- mendapatkan jumlah dosen berdasar jenis kelamin
+--- sepertinya ini fitur untuk membuat "view" (?)
+---
+
+create or replace function
+"public"."jumlah_dosen_by_jk"("jk" bpchar)
+returns "pg_catalog"."int4" as $body$
+declare
+jumlah_dosen integer;
+begin
+select count(*) into jumlah_dosen
+from dosen where jenis_kelamin=jk;
+return jumlah_dosen;
+end$body$
+language plpgsql volatile
+
+select public.jumlah_dosen_by_jk('L');
+select public.jumlah_dosen_by_jk('P');
+
+
+---
+--- mendapatkan daftar dosen menggunakan nama
+--- sepertinya ini fitur untuk membuat "view" (?)
+---
+
+create or replace function
+"public"."list_dosen_by_nama"("str_nama_dosen" varchar)
+returns table("nip" bpchar, "nama" varchar) as $body$
+begin
+return query
+select dosen.nomor_induk_dosen as nip,
+dosen.nama_dosen as nama from dosen
+where lower (dosen.nama_dosen) like '%' ||
+lower(str_nama_dosen) || '%';
+end
+$body$
+language plpgsql volatile
+
+select* from public.list_dosen_by_nama('Abu');
